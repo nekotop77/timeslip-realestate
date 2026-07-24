@@ -1,0 +1,9 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+
+# 로컬 SQLite DB — migrate+seed로 재생성 가능
+*.db
+*.db-journal

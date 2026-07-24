@@ -1,0 +1,50 @@
+// 타임슬립 집값 — 데이터 모델
+// Region: 법정동코드(LAWD_CD) 매핑 단위 (시군구)
+// Apartment: 단지 정보
+// PriceRecord: 단지별 연도/월 평균 실거래가
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Region {
+  id         String      @id @default(cuid())
+  lawdCd     String      @unique // 법정동코드 5자리, 예: "11710"
+  sido       String // 시/도, 예: "서울특별시"
+  sigungu    String // 시/군/구, 예: "송파구"
+  label      String // 화면 표시용, 예: "서울 송파구"
+  apartments Apartment[]
+
+  @@index([sido])
+}
+
+model Apartment {
+  id           String        @id @default(cuid())
+  name         String // 단지명, 예: "헬리오시티"
+  regionId     String
+  region       Region        @relation(fields: [regionId], references: [id])
+  lat          Float?
+  lng          Float?
+  areaM2       Float // 전용면적(㎡), MVP 범위: 80~85
+  priceRecords PriceRecord[]
+
+  @@index([regionId])
+}
+
+model PriceRecord {
+  id          String    @id @default(cuid())
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id])
+  year        Int // 계약년도, 예: 2016
+  month       Int? // 계약월 (월별 집계 시), 연평균만 있으면 null
+  avgPrice    Int // 평균 거래가 (만원 단위)
+  dealCount   Int? // 집계 근거가 된 거래 건수
+
+  @@unique([apartmentId, year, month])
+  @@index([apartmentId, year])
+}

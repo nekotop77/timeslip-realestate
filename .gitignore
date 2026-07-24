@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Prisma
+server/generated/
+*.db
+*.db-journal
+
+# Editor / OS
+.DS_Store
+
+# Vercel
+.vercel
+
+# Prisma CLI가 자동 설치하는 에이전트 스킬 문서 (프로젝트 코드 아님)
+server/.agents/
+server/.claude/
+server/.windsurf/
+server/skills-lock.json
