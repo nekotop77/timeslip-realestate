@@ -25,6 +25,7 @@ model Region {
 
 model Apartment {
   id           String        @id @default(cuid())
+  aptSeq       String        @unique // 국토부 실거래가 API의 단지 고유코드, 예: "11710-164"
   name         String // 단지명, 예: "헬리오시티"
   regionId     String
   region       Region        @relation(fields: [regionId], references: [id])
@@ -41,7 +42,7 @@ model PriceRecord {
   apartmentId String
   apartment   Apartment @relation(fields: [apartmentId], references: [id])
   year        Int // 계약년도, 예: 2016
-  month       Int? // 계약월 (월별 집계 시), 연평균만 있으면 null
+  month       Int // 계약월(1~12). 연평균 레코드는 0 (SQLite는 nullable 컬럼이 있는 복합 unique로 upsert가 안 되어 sentinel 값 사용)
   avgPrice    Int // 평균 거래가 (만원 단위)
   dealCount   Int? // 집계 근거가 된 거래 건수
 

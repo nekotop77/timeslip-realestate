@@ -16,6 +16,7 @@
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.9.0",
     "@prisma/client": "^7.9.0",
+    "fast-xml-parser": "^5.10.1",
     "prisma": "^7.9.0"
   },
   "devDependencies": {
