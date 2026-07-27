@@ -25,15 +25,18 @@ model Region {
 
 model Apartment {
   id           String        @id @default(cuid())
-  aptSeq       String        @unique // 국토부 실거래가 API의 단지 고유코드, 예: "11710-164"
+  aptSeq       String // 국토부 실거래가 API의 단지 고유코드, 예: "11710-164" (평형대별로 행이 나뉘어 더는 단독 unique 아님)
+  areaBand     String        @default("30") // 평형대 키: "10"/"20"/"30"/"40" (aggregate.ts AREA_BANDS 참고)
   name         String // 단지명, 예: "헬리오시티"
+  dong         String        @default("") // 법정동명, 예: "잠실동"
   regionId     String
   region       Region        @relation(fields: [regionId], references: [id])
   lat          Float?
   lng          Float?
-  areaM2       Float // 전용면적(㎡), MVP 범위: 80~85
+  areaM2       Float // 전용면적(㎡) 평균값
   priceRecords PriceRecord[]
 
+  @@unique([aptSeq, areaBand])
   @@index([regionId])
 }
 

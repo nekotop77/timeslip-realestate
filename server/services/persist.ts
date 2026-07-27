@@ -11,17 +11,21 @@ export async function saveAggregatedApartments(
   if (!region) throw new Error(`등록되지 않은 법정동코드: ${lawdCd}`)
 
   for (const apt of aggregated) {
-    const existing = await prisma.apartment.findUnique({ where: { aptSeq: apt.aptSeq } })
+    const existing = await prisma.apartment.findUnique({
+      where: { aptSeq_areaBand: { aptSeq: apt.aptSeq, areaBand: apt.areaBand } },
+    })
 
     const apartment = existing
       ? await prisma.apartment.update({
           where: { id: existing.id },
-          data: { name: apt.name, areaM2: apt.areaM2 },
+          data: { name: apt.name, dong: apt.dong, areaM2: apt.areaM2 },
         })
       : await prisma.apartment.create({
           data: {
             aptSeq: apt.aptSeq,
+            areaBand: apt.areaBand,
             name: apt.name,
+            dong: apt.dong,
             areaM2: apt.areaM2,
             regionId: region.id,
             ...(await geocodeAddress(`${region.sido} ${region.sigungu} ${apt.roadAddress}`)),
