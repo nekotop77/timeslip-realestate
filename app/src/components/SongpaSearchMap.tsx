@@ -3,6 +3,7 @@ import { Map, MapMarker, useKakaoLoader } from "react-kakao-maps-sdk"
 import songpaData from "../data/songpa.json"
 import { formatManwon } from "../lib/formatPrice"
 import { PIN_ICON, PIN_SIZE } from "../lib/mapPins"
+import LogoMark from "./LogoMark"
 
 interface ApartmentRow {
   aptSeq: string
@@ -121,9 +122,12 @@ export default function SongpaSearchMap() {
       )}
 
       <div className="absolute top-4 left-4 z-10 w-60 rounded-lg bg-surface/95 border border-line p-3 shadow-heavy">
-        <p className="text-[11px] font-bold tracking-[1.5px] uppercase text-now mb-3">
-          TimeSlip · 송파구
-        </p>
+        <div className="flex items-center gap-1.5 mb-3">
+          <LogoMark className="w-4 h-auto text-white flex-none" />
+          <p className="text-[11px] font-bold tracking-[1.5px] uppercase text-now">
+            TimeSlip · 송파구
+          </p>
+        </div>
         <div className="flex gap-1.5 mb-3">
           {AREA_BANDS.map((band) => (
             <button
