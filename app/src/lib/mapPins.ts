@@ -7,10 +7,10 @@ function pinSvg(color: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
 }
 
-// 파란색 = 10년전·현재 둘 다 예산 내, 빨간색 = 10년전엔 됐지만 지금은 예산 초과
+// 회색 = 과거(10년전) 가격대 매칭, 파란색 = 현재 가격대 매칭
 export const PIN_ICON = {
-  blue: pinSvg("#539df5"),
-  red: pinSvg("#f3727f"),
+  past: pinSvg("#9aa0a6"),
+  now: pinSvg("#539df5"),
 }
 
 export const PIN_SIZE = { width: 28, height: 36 }
