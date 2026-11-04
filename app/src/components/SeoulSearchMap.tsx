@@ -4,7 +4,7 @@ import { formatManwon } from "../lib/formatPrice"
 import { PIN_ICON, PIN_SIZE } from "../lib/mapPins"
 import LogoMark from "./LogoMark"
 
-interface ApartmentRow {
+export interface ApartmentRow {
   aptSeq: string
   name: string
   sigungu: string
@@ -17,7 +17,8 @@ interface ApartmentRow {
   priceNow: number | null // 만원
 }
 
-interface SeoulData {
+export interface SeoulData {
+  collectedAt: string // "YYYY-MM-DD"
   periods: { past: string; current: string }
   rows: ApartmentRow[]
 }
@@ -68,13 +69,17 @@ function inEokBand(price: number | null, bandEok: number): boolean {
   return Math.floor(price / 10000) === bandEok
 }
 
-export default function SeoulSearchMap() {
+export default function SeoulSearchMap({
+  data,
+  dataError,
+}: {
+  data: SeoulData | null
+  dataError: boolean
+}) {
   const [loading, error] = useKakaoLoader({
     appkey: import.meta.env.VITE_KAKAO_MAP_KEY,
     libraries: ["clusterer"],
   })
-  const [data, setData] = useState<SeoulData | null>(null)
-  const [dataError, setDataError] = useState(false)
   const [district, setDistrict] = useState(ALL_DISTRICTS)
   const [activeBand, setActiveBand] = useState("30")
   const [budgetInput, setBudgetInput] = useState("5")
@@ -98,25 +103,6 @@ export default function SeoulSearchMap() {
     const observer = new ResizeObserver(syncSize)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
-
-  // 약 수만 행이라 번들에 넣지 않고 첫 화면 이후 따로 받는다.
-  useEffect(() => {
-    let cancelled = false
-    fetch("/data/seoul.json")
-      .then((res) => {
-        if (!res.ok) throw new Error(String(res.status))
-        return res.json() as Promise<SeoulData>
-      })
-      .then((json) => {
-        if (!cancelled) setData(json)
-      })
-      .catch(() => {
-        if (!cancelled) setDataError(true)
-      })
-    return () => {
-      cancelled = true
-    }
   }, [])
 
   const districts = useMemo(

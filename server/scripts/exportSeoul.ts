@@ -26,8 +26,11 @@ async function main() {
     priceNow: apt.priceRecords.find((p) => p.year === CURRENT_YEAR)?.avgPrice ?? null,
   }))
 
+  // 수집 직후 내보내므로 내보낸 날짜를 수집일로 쓴다 (예: "2026-11-04", sv-SE 로캘이 이 형식).
+  const collectedAt = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })
+
   mkdirSync(dirname(OUT_PATH), { recursive: true })
-  writeFileSync(OUT_PATH, JSON.stringify({ periods: PERIOD_LABELS, rows }))
+  writeFileSync(OUT_PATH, JSON.stringify({ collectedAt, periods: PERIOD_LABELS, rows }))
 
   console.log(`${OUT_PATH}: ${rows.length}개 저장 (좌표 없어 제외 ${apartments.length - rows.length}개)`)
   const perDistrict = new Map<string, number>()
