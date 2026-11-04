@@ -8,7 +8,7 @@ function App() {
   // 약 수만 행이라 번들에 넣지 않고 첫 화면 이후 따로 받는다.
   useEffect(() => {
     let cancelled = false
-    fetch("/data/seoul.json")
+    fetch(`${import.meta.env.BASE_URL}data/seoul.json`)
       .then((res) => {
         if (!res.ok) throw new Error(String(res.status))
         return res.json() as Promise<SeoulData>
