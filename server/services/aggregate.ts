@@ -28,7 +28,8 @@ export interface AggregatedApartment {
   dong: string
   sggCd: string
   areaM2: number
-  roadAddress: string
+  roadAddress: string // 도로명 정보가 없는 거래만 있으면 빈 문자열
+  jibunAddress: string
   yearly: YearlyAverage[]
 }
 
@@ -36,6 +37,7 @@ export interface AggregatedApartment {
 export function aggregateByApartment(items: AptTradeItem[]): AggregatedApartment[] {
   const byGroup = new Map<string, AptTradeItem[]>()
   for (const item of items) {
+    if (item.cdealType === "O") continue // 계약 해제된 거래는 평균에서 제외
     const band = bandOf(item.excluUseAr)
     if (!band) continue // 음수/이상치 등 방어
     const key = `${item.aptSeq}::${band}`
@@ -61,6 +63,8 @@ export function aggregateByApartment(items: AptTradeItem[]): AggregatedApartment
     }))
 
     const first = trades[0]
+    // 과거 거래는 도로명이 비어 있는 경우가 있어, 도로명이 있는 거래를 우선 사용한다.
+    const withRoad = trades.find((t) => t.roadNm)
     const avgArea = trades.reduce((sum, t) => sum + t.excluUseAr, 0) / trades.length
 
     return {
@@ -70,9 +74,12 @@ export function aggregateByApartment(items: AptTradeItem[]): AggregatedApartment
       dong: first.umdNm,
       sggCd: first.sggCd,
       areaM2: Math.round(avgArea * 100) / 100,
-      roadAddress: `${first.roadNm} ${first.roadNmBonbun}${
-        first.roadNmBubun && first.roadNmBubun !== "0" ? `-${first.roadNmBubun}` : ""
-      }`.trim(),
+      roadAddress: withRoad
+        ? `${withRoad.roadNm} ${withRoad.roadNmBonbun}${
+            withRoad.roadNmBubun && withRoad.roadNmBubun !== "0" ? `-${withRoad.roadNmBubun}` : ""
+          }`.trim()
+        : "",
+      jibunAddress: `${first.umdNm} ${first.jibun}`.trim(),
       yearly,
     }
   })

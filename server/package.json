@@ -7,7 +7,9 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "sync": "tsx scripts/syncAll.ts",
+    "export": "tsx scripts/exportSeoul.ts"
   },
   "keywords": [],
   "author": "",

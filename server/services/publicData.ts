@@ -9,6 +9,7 @@ const BROWSER_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 
 const PAGE_SIZE = 1000
+const MAX_ATTEMPTS = 4
 
 export interface AptTradeItem {
   aptSeq: string
@@ -25,6 +26,7 @@ export interface AptTradeItem {
   roadNmBonbun: string
   roadNmBubun: string
   sggCd: string
+  cdealType: string // 해제 여부. 해제된 거래는 "O"
 }
 
 const parser = new XMLParser({
@@ -47,6 +49,20 @@ function toItem(raw: Record<string, string | number>): AptTradeItem {
     roadNmBonbun: String(raw.roadNmBonbun ?? "").trim(),
     roadNmBubun: String(raw.roadNmBubun ?? "").trim(),
     sggCd: String(raw.sggCd).trim(),
+    cdealType: String(raw.cdealType ?? "").trim(),
+  }
+}
+
+/** 게이트웨이의 일시 오류(비정상 XML, 네트워크 끊김)가 잦아 잠시 쉬었다 재시도한다. */
+async function withRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn()
+    } catch (e) {
+      if (attempt >= MAX_ATTEMPTS) throw e
+      console.warn(`  재시도 ${attempt}/${MAX_ATTEMPTS - 1} [${label}]: ${(e as Error).message}`)
+      await new Promise((resolve) => setTimeout(resolve, 2000 * attempt))
+    }
   }
 }
 
@@ -81,12 +97,15 @@ export async function fetchAptTrades(
   lawdCd: string,
   dealYmd: string,
 ): Promise<AptTradeItem[]> {
-  const first = await fetchPage(lawdCd, dealYmd, 1)
+  const page = (n: number) =>
+    withRetry(`${lawdCd}/${dealYmd} p${n}`, () => fetchPage(lawdCd, dealYmd, n))
+
+  const first = await page(1)
   const pages = Math.ceil(first.totalCount / PAGE_SIZE)
   if (pages <= 1) return first.items
 
   const rest = await Promise.all(
-    Array.from({ length: pages - 1 }, (_, i) => fetchPage(lawdCd, dealYmd, i + 2)),
+    Array.from({ length: pages - 1 }, (_, i) => page(i + 2)),
   )
   return [first.items, ...rest.map((p) => p.items)].flat()
 }
