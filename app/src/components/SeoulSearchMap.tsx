@@ -88,13 +88,23 @@ export default function SeoulSearchMap({
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<kakao.maps.Map | null>(null)
 
+  const lastSizeRef = useRef({ width: 0, height: 0 })
+
+  // 지도는 크기가 바뀌면 좌상단을 고정한 채 늘어나므로, 원래 중심은 이전 크기의 절반 위치에 남아 있다.
+  // 카카오맵이 창 크기 변경을 먼저 처리하기도 해서 getCenter()는 이미 어긋난 값일 수 있어 쓰지 않는다.
   const syncSize = () => {
     const map = mapRef.current
-    if (!map) return
-    // relayout은 좌상단을 고정하므로, 중심은 그 전에 읽어 두어야 화면 중앙이 유지된다.
-    const center = map.getCenter()
+    const el = containerRef.current
+    if (!map || !el) return
+    const width = el.clientWidth
+    const height = el.clientHeight
+    if (width === 0 || height === 0) return
+    const last = lastSizeRef.current
+    if (last.width === width && last.height === height) return
     map.relayout()
-    map.setCenter(center)
+    const previousCenter = new kakao.maps.Point(last.width / 2, last.height / 2)
+    map.setCenter(map.getProjection().coordsFromContainerPoint(previousCenter))
+    lastSizeRef.current = { width, height }
   }
 
   useEffect(() => {
@@ -183,6 +193,10 @@ export default function SeoulSearchMap({
           level={SEOUL_LEVEL}
           onCreate={(map) => {
             mapRef.current = map
+            lastSizeRef.current = {
+              width: containerRef.current?.clientWidth ?? 0,
+              height: containerRef.current?.clientHeight ?? 0,
+            }
             syncSize()
           }}
         >
