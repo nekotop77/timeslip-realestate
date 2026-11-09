@@ -3,13 +3,19 @@
 /* 디자인 토큰. 규칙과 용도는 저장소 루트의 DESIGN.md 참고.
    past/now는 지도 핀(src/lib/mapPins.ts)과 같은 값이어야 한다. */
 @theme {
-  --color-canvas: #ffffff;
-  --color-ink: #212121;
-  --color-primary: #17171c;
-  --color-muted: #75758a;
-  --color-hairline: #d9d9dd;
-  --color-error: #b30000;
+  --color-canvas: #121212;
+  --color-surface: #181818;
+  --color-ink: #ffffff;
+  --color-muted: #b3b3b3;
+  --color-hairline: #333333;
+  --color-primary: #ffffff;
+  --color-on-primary: #121212;
+  --color-error: #f3727f;
   --color-focus: #4c6ee6;
+
+  /* 지도 정보창(카카오 기본 흰 말풍선) 안의 글자 */
+  --color-bubble-ink: #212121;
+  --color-bubble-muted: #75758a;
 
   --color-past: #75758a;
   --color-now: #1863dc;
@@ -19,7 +25,7 @@
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
