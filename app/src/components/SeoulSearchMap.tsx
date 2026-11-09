@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 import { Map, MapMarker, MarkerClusterer, useKakaoLoader } from "react-kakao-maps-sdk"
 import { formatManwon } from "../lib/formatPrice"
 import { CLUSTER_STYLES, PIN_ICON, PIN_SIZE } from "../lib/mapPins"
-import LogoMark from "./LogoMark"
 
 export interface ApartmentRow {
   aptSeq: string
@@ -140,10 +139,10 @@ export default function SeoulSearchMap({
         onClick={() => setActiveKey(pin.pinKey)}
       >
         {activeKey === pin.pinKey && (
-          <div className="px-3 py-2 text-xs leading-relaxed text-ink whitespace-nowrap">
+          <div className="px-3 py-2 text-xs leading-relaxed text-bubble-ink whitespace-nowrap">
             <p>
               <span className="font-medium">{pin.name}</span>{" "}
-              <span className="text-muted">
+              <span className="text-bubble-muted">
                 {pin.sigungu} {pin.dong}
               </span>
             </p>
@@ -164,9 +163,11 @@ export default function SeoulSearchMap({
     setActiveKey(null)
   }
 
-  const pastYear = data?.periods.past.slice(0, 4)
-  const currentYear = data?.periods.current.slice(0, 4)
   const ready = data !== null && budgetEok !== null
+  const results = [
+    { type: "past" as const, period: data?.periods.past, count: pastPins.length },
+    { type: "now" as const, period: data?.periods.current, count: nowPins.length },
+  ]
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
@@ -200,25 +201,35 @@ export default function SeoulSearchMap({
         </Map>
       )}
 
-      <div className="absolute top-4 left-4 z-10 w-64 flex flex-col gap-3 rounded-2xl border border-hairline bg-canvas p-4 text-ink">
-        <div className="flex items-center gap-2">
-          <LogoMark className="w-4 h-auto flex-none" />
-          <span className="text-sm font-medium">TimeSlip</span>
-        </div>
+      <div className="absolute top-4 left-4 z-10 w-64 flex flex-col gap-3 rounded-2xl border border-hairline bg-surface p-4 text-ink">
+        <h1 className="text-sm font-bold">TimeSlip</h1>
 
-        <select
-          value={district}
-          onChange={(e) => handleDistrictChange(e.target.value)}
-          aria-label="지역"
-          className="w-full rounded border border-hairline bg-canvas px-3 py-2 text-sm"
-        >
-          <option value={ALL_DISTRICTS}>서울 전체</option>
-          {districts.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
+        {/* 브라우저 기본 화살표는 여백을 무시하는 경우가 있어(사파리) 직접 그린다. */}
+        <div className="relative">
+          <select
+            value={district}
+            onChange={(e) => handleDistrictChange(e.target.value)}
+            aria-label="지역"
+            className="w-full appearance-none rounded border border-hairline bg-surface py-2 pl-3 pr-9 text-sm"
+          >
+            <option value={ALL_DISTRICTS}>서울 전체</option>
+            {districts.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 12 12"
+            className="pointer-events-none absolute right-3 top-1/2 size-3 -translate-y-1/2"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <path d="M2.5 4.5 6 8l3.5-3.5" />
+          </svg>
+        </div>
 
         <div className="flex gap-2">
           {AREA_BANDS.map((band) => (
@@ -229,7 +240,7 @@ export default function SeoulSearchMap({
               onClick={() => setActiveBand(band.key)}
               className={`flex-1 rounded-full border py-1 text-xs font-medium transition-colors ${
                 activeBand === band.key
-                  ? "border-primary bg-primary text-white"
+                  ? "border-primary bg-primary text-on-primary"
                   : "border-hairline text-ink hover:border-primary"
               }`}
             >
@@ -249,7 +260,7 @@ export default function SeoulSearchMap({
             />
             <span className="flex-none text-sm text-muted">억대</span>
           </label>
-          <button type="submit" className="rounded-full bg-primary px-4 text-sm font-medium text-white">
+          <button type="submit" className="rounded-full bg-primary px-4 text-sm font-medium text-on-primary">
             검색
           </button>
         </form>
@@ -257,10 +268,14 @@ export default function SeoulSearchMap({
         {dataError ? (
           <p className="text-xs text-error">가격 데이터를 불러오지 못했습니다.</p>
         ) : (
-          <div className="flex gap-4 border-t border-hairline pt-3 text-sm tabular-nums">
-            <PriceTag type="past" value={`${pastYear ?? "—"} ${ready ? pastPins.length : "—"}`} />
-            <PriceTag type="now" value={`${currentYear ?? "—"} ${ready ? nowPins.length : "—"}`} />
-          </div>
+          <ul className="flex flex-col gap-2 border-t border-hairline pt-3 text-sm tabular-nums">
+            {results.map((r) => (
+              <li key={r.type} className="flex items-center justify-between">
+                <PriceTag type={r.type} value={r.period ?? "—"} />
+                <span>{ready ? `${r.count.toLocaleString()}곳` : "—"}</span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>

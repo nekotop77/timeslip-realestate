@@ -43,7 +43,7 @@ function App() {
       <main className="flex-1 min-h-0">
         <SeoulSearchMap data={data} dataError={dataError} />
       </main>
-      <footer className="flex-none flex flex-wrap justify-center gap-x-2 border-t border-hairline bg-canvas px-4 py-2 text-xs text-muted">
+      <footer className="flex-none flex flex-wrap justify-center gap-x-2 border-t border-hairline bg-surface px-4 py-2 text-xs text-muted">
         {collectionInfo.map((item) => (
           <span key={item} className="whitespace-nowrap">
             {item}
