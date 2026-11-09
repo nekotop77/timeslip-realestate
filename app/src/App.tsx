@@ -24,14 +24,18 @@ function App() {
     }
   }, [])
 
+  // 수집 정보 → 출처 → 기간 순. 좁은 화면에서는 항목 단위로만 줄을 바꾼다.
   const collectionInfo = useMemo(() => {
-    if (!data) return null
+    if (!data) return []
     const districtCount = new Set(data.rows.map((r) => r.sigungu)).size
     return [
       `최종 수집 ${data.collectedAt.replaceAll("-", ".")}`,
       `서울 ${districtCount}개 구`,
       `단지·평형 ${data.rows.length.toLocaleString()}건`,
-    ].join(" · ")
+      "국토교통부 실거래가 단지별 평균",
+      data.periods.past,
+      data.periods.current,
+    ]
   }, [data])
 
   return (
@@ -39,11 +43,15 @@ function App() {
       <main className="flex-1 min-h-0">
         <SeoulSearchMap data={data} dataError={dataError} />
       </main>
-      <footer className="flex-none border-t border-line bg-surface px-4 py-2 text-center text-[11px] text-silver">
-        {collectionInfo && <span className="inline-block mr-3">{collectionInfo}</span>}
-        <span className="inline-block">
+      <footer className="flex-none flex flex-wrap justify-center gap-x-2 border-t border-hairline bg-canvas px-4 py-2 text-xs text-muted">
+        {collectionInfo.map((item) => (
+          <span key={item} className="whitespace-nowrap">
+            {item}
+          </span>
+        ))}
+        <span className="whitespace-nowrap">
           문의{" "}
-          <a href="mailto:cjsrmatkfkd@gmail.com" className="text-white underline-offset-2 hover:underline">
+          <a href="mailto:cjsrmatkfkd@gmail.com" className="text-ink underline-offset-2 hover:underline">
             cjsrmatkfkd@gmail.com
           </a>
         </span>

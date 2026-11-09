@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 import { Map, MapMarker, MarkerClusterer, useKakaoLoader } from "react-kakao-maps-sdk"
 import { formatManwon } from "../lib/formatPrice"
-import { PIN_ICON, PIN_SIZE } from "../lib/mapPins"
+import { CLUSTER_STYLES, PIN_ICON, PIN_SIZE } from "../lib/mapPins"
 import LogoMark from "./LogoMark"
 
 export interface ApartmentRow {
@@ -35,27 +35,6 @@ const SEOUL_LEVEL = 9
 // 이 레벨 이상으로 축소하면 핀을 묶어서 표시한다.
 const CLUSTER_MIN_LEVEL = 7
 
-function clusterStyle(color: string) {
-  return [
-    {
-      width: "38px",
-      height: "38px",
-      lineHeight: "38px",
-      borderRadius: "50%",
-      background: color,
-      border: "2px solid #fff",
-      color: "#fff",
-      fontSize: "12px",
-      fontWeight: "700",
-      textAlign: "center",
-    },
-  ]
-}
-
-const CLUSTER_STYLES = {
-  past: clusterStyle("#9aa0a6"),
-  now: clusterStyle("#539df5"),
-}
 const AREA_BANDS = [
   { key: "10", label: "10평대" },
   { key: "20", label: "20평대" },
@@ -161,11 +140,17 @@ export default function SeoulSearchMap({
         onClick={() => setActiveKey(pin.pinKey)}
       >
         {activeKey === pin.pinKey && (
-          <div className="p-1.5 text-xs text-black whitespace-nowrap">
-            <strong>{pin.name}</strong> ({pin.sigungu} {pin.dong})
-            <br />
-            10년전: {pin.pricePast !== null ? formatManwon(pin.pricePast) : "거래 데이터 없음"} · 현재:{" "}
-            {pin.priceNow !== null ? formatManwon(pin.priceNow) : "거래 데이터 없음"}
+          <div className="px-3 py-2 text-xs leading-relaxed text-ink whitespace-nowrap">
+            <p>
+              <span className="font-medium">{pin.name}</span>{" "}
+              <span className="text-muted">
+                {pin.sigungu} {pin.dong}
+              </span>
+            </p>
+            <p className="flex gap-3">
+              <PriceTag type="past" value={pin.pricePast !== null ? formatManwon(pin.pricePast) : "—"} />
+              <PriceTag type="now" value={pin.priceNow !== null ? formatManwon(pin.priceNow) : "—"} />
+            </p>
           </div>
         )}
       </MapMarker>
@@ -179,10 +164,14 @@ export default function SeoulSearchMap({
     setActiveKey(null)
   }
 
+  const pastYear = data?.periods.past.slice(0, 4)
+  const currentYear = data?.periods.current.slice(0, 4)
+  const ready = data !== null && budgetEok !== null
+
   return (
     <div ref={containerRef} className="relative w-full h-full">
       {error && (
-        <p className="absolute inset-0 flex items-center justify-center text-sm text-over-budget px-6 text-center">
+        <p className="absolute inset-0 flex items-center justify-center text-sm text-error px-6 text-center">
           카카오맵 로드 실패 — API 키/도메인 등록을 확인해주세요.
         </p>
       )}
@@ -202,35 +191,26 @@ export default function SeoulSearchMap({
         >
           {/* 과거/현재 색 구분이 묶음에서도 유지되도록 클러스터러를 따로 둔다.
               key로 다시 만들면 이전 묶음이 지도에 남으므로, 핀만 교체한다. */}
-          <MarkerClusterer
-            averageCenter
-            minLevel={CLUSTER_MIN_LEVEL}
-            styles={CLUSTER_STYLES.past}
-          >
+          <MarkerClusterer averageCenter minLevel={CLUSTER_MIN_LEVEL} styles={CLUSTER_STYLES.past}>
             {pastPins.map(renderMarker)}
           </MarkerClusterer>
-          <MarkerClusterer
-            averageCenter
-            minLevel={CLUSTER_MIN_LEVEL}
-            styles={CLUSTER_STYLES.now}
-          >
+          <MarkerClusterer averageCenter minLevel={CLUSTER_MIN_LEVEL} styles={CLUSTER_STYLES.now}>
             {nowPins.map(renderMarker)}
           </MarkerClusterer>
         </Map>
       )}
 
-      <div className="absolute top-4 left-4 z-10 w-60 rounded-lg bg-surface/95 border border-line p-3 shadow-heavy">
-        <div className="flex items-center gap-1.5 mb-3">
-          <LogoMark className="w-4 h-auto text-white flex-none" />
-          <p className="text-[11px] font-bold tracking-[1.5px] uppercase text-now">
-            TimeSlip · 서울
-          </p>
+      <div className="absolute top-4 left-4 z-10 w-64 flex flex-col gap-3 rounded-2xl border border-hairline bg-canvas p-4 text-ink">
+        <div className="flex items-center gap-2">
+          <LogoMark className="w-4 h-auto flex-none" />
+          <span className="text-sm font-medium">TimeSlip</span>
         </div>
+
         <select
           value={district}
           onChange={(e) => handleDistrictChange(e.target.value)}
-          aria-label="지역 선택"
-          className="w-full mb-2 rounded-full bg-elevated text-xs text-white px-3 py-1.5 outline-none"
+          aria-label="지역"
+          className="w-full rounded border border-hairline bg-canvas px-3 py-2 text-sm"
         >
           <option value={ALL_DISTRICTS}>서울 전체</option>
           {districts.map((d) => (
@@ -239,64 +219,60 @@ export default function SeoulSearchMap({
             </option>
           ))}
         </select>
-        <div className="flex gap-1.5 mb-3">
+
+        <div className="flex gap-2">
           {AREA_BANDS.map((band) => (
             <button
               key={band.key}
               type="button"
+              aria-pressed={activeBand === band.key}
               onClick={() => setActiveBand(band.key)}
-              className={`flex-1 text-[11px] font-bold py-1 rounded-full transition-colors ${
-                activeBand === band.key ? "bg-white text-black" : "bg-elevated text-silver"
+              className={`flex-1 rounded-full border py-1 text-xs font-medium transition-colors ${
+                activeBand === band.key
+                  ? "border-primary bg-primary text-white"
+                  : "border-hairline text-ink hover:border-primary"
               }`}
             >
               {band.label}
             </button>
           ))}
         </div>
-        <form onSubmit={handleSearch} className="flex gap-1.5">
-          <div className="flex-1 flex items-center bg-elevated rounded-full px-3">
+
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <label className="flex-1 flex items-center rounded border border-hairline px-3 focus-within:border-primary">
             <input
               value={budgetInput}
               onChange={(e) => setBudgetInput(e.target.value)}
               inputMode="numeric"
-              placeholder="예산"
-              className="w-full min-w-0 bg-transparent text-sm text-white placeholder:text-silver py-2 outline-none"
+              aria-label="예산"
+              className="w-full min-w-0 bg-transparent py-2 text-sm outline-none"
             />
-            <span className="flex-none text-xs text-silver">억대</span>
-          </div>
-          <button
-            type="submit"
-            className="px-4 rounded-full bg-now text-black text-sm font-bold"
-          >
+            <span className="flex-none text-sm text-muted">억대</span>
+          </label>
+          <button type="submit" className="rounded-full bg-primary px-4 text-sm font-medium text-white">
             검색
           </button>
         </form>
-        {dataError && (
-          <p className="text-[11px] text-over-budget mt-2">가격 데이터를 불러오지 못했습니다.</p>
-        )}
-        {!dataError && !data && <p className="text-[11px] text-silver mt-2">가격 데이터 불러오는 중…</p>}
-        {data && budgetEok !== null && (
-          <p className="text-[11px] text-silver mt-2">
-            {budgetEok}억대 검색 · 과거 {pastPins.length}곳 · 현재 {nowPins.length}곳
-          </p>
-        )}
 
-        <div className="flex items-center gap-3 mt-3 pt-2 border-t border-line">
-          <div className="flex items-center gap-1.5 text-[11px] text-silver">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#9aa0a6]" />
-            과거 가격대
+        {dataError ? (
+          <p className="text-xs text-error">가격 데이터를 불러오지 못했습니다.</p>
+        ) : (
+          <div className="flex gap-4 border-t border-hairline pt-3 text-sm tabular-nums">
+            <PriceTag type="past" value={`${pastYear ?? "—"} ${ready ? pastPins.length : "—"}`} />
+            <PriceTag type="now" value={`${currentYear ?? "—"} ${ready ? nowPins.length : "—"}`} />
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-silver">
-            <span className="w-2.5 h-2.5 rounded-full bg-info" />
-            현재 가격대
-          </div>
-        </div>
-        <p className="text-[10px] leading-relaxed text-silver/80 mt-2">
-          국토교통부 실거래가 기준 · 단지별 평균 거래가
-          <br />
-          {data ? `과거 ${data.periods.past} · 현재 ${data.periods.current}` : "\u00a0"}
-        </p>
+        )}
       </div>
     </div>
+  )
+}
+
+/** 과거(회색)/현재(파랑) 색 점 + 값. 범례 대신 색 자체로 구분한다. */
+function PriceTag({ type, value }: { type: "past" | "now"; value: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`size-2 rounded-full ${type === "past" ? "bg-past" : "bg-now"}`} />
+      {value}
+    </span>
   )
 }
