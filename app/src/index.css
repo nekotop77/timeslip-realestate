@@ -1,42 +1,40 @@
 @import "tailwindcss";
 
-/* 타임슬립 집값 디자인 시스템 토큰 — docs/design-system.md 참고 */
+/* 디자인 토큰. 규칙과 용도는 저장소 루트의 DESIGN.md 참고.
+   past/now는 지도 핀(src/lib/mapPins.ts)과 같은 값이어야 한다. */
 @theme {
-  --color-base: #121212;
-  --color-surface: #181818;
-  --color-elevated: #1f1f1f;
+  --color-canvas: #ffffff;
+  --color-ink: #212121;
+  --color-primary: #17171c;
+  --color-muted: #75758a;
+  --color-hairline: #d9d9dd;
+  --color-error: #b30000;
+  --color-focus: #4c6ee6;
 
-  --color-white: #ffffff;
-  --color-silver: #b3b3b3;
-  --color-line: #333333;
-  --color-line-strong: #4d4d4d;
-  --color-outline: #7c7c7c;
-
-  --color-now: #1ed760;
-  --color-past: #4d4d4d;
-  --color-over-budget: #f3727f;
-  --color-warning: #ffa42b;
-  --color-info: #539df5;
+  --color-past: #75758a;
+  --color-now: #1863dc;
 
   --font-sans: Pretendard, "Pretendard Variable", -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-
-  --shadow-med: rgba(0, 0, 0, 0.3) 0px 8px 8px;
-  --shadow-heavy: rgba(0, 0, 0, 0.5) 0px 8px 24px;
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background: var(--color-base);
-  color: var(--color-white);
+  background: var(--color-canvas);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
 #root {
   min-height: 100svh;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
