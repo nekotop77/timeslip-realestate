@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
+import { Analytics } from "@vercel/analytics/react"
 import SeoulSearchMap, { type SeoulData } from "./components/SeoulSearchMap"
+
+// novlive.com은 /timeslip/* 요청을 이 Vercel 프로젝트로 넘겨주는 별도 프로젝트다.
+// 그 주소에서는 통계도 /timeslip/_vercel 로 보내야 이 프로젝트(timeslip-house)에 쌓인다.
+const ANALYTICS_BASE_PATH = location.hostname === "novlive.com" ? "/timeslip/_vercel" : "/_vercel"
 
 function App() {
   const [data, setData] = useState<SeoulData | null>(null)
@@ -56,6 +61,7 @@ function App() {
           </a>
         </span>
       </footer>
+      <Analytics basePath={ANALYTICS_BASE_PATH} />
     </div>
   )
 }
